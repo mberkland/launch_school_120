@@ -1,1 +1,1 @@
-*** Word for Launch School course 120 ***
+Work for Launch School course 120
