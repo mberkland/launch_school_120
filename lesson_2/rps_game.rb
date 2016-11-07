@@ -9,7 +9,7 @@
 # If the players chose the same move, then it's a tie.
 
 class Move
-  VALUES = ['rock', 'paper', 'scissors']
+  VALUES = ['rock', 'paper', 'scissors'].freeze
 
   def initialize(value)
     @value = value
@@ -28,35 +28,20 @@ class Move
   end
 
   def >(other_move)
-    if rock?
-      return true if other_move.scissors?
-      return false
-    elsif paper?
-      return true if other_move.rock?
-      return false
-    elsif scissors?
-      return true if other_move.paper?
-      return false
-    end
+    (rock? && other_move.scissors?) ||
+      (paper? && other_move.rock?) ||
+      (scissors? && other_move.paper?)
   end
 
   def <(other_move)
-    if rock?
-      return true if other_move.paper?
-      return false
-    elsif paper?
-      return true if other_move.scissors?
-      return false
-    elsif scissors?
-      reutrn true if other_move.rock?
-      return false
-    end
+    (rock? && other_move.paper?) ||
+      (paper? && other_move.scissors?) ||
+      (scissors? & other_move.rock?)
   end
 
   def to_s
     @value
   end
-
 end
 
 class Player
@@ -81,13 +66,13 @@ class Human < Player
 
   def choose
     choice = nil
-      loop do
-        puts "Please choose rock, paper, or scissors:"
-        choice = gets.chomp
-        break if Move::VALUES.include?(choice)
-        puts "Sorry invalid choice"
-      end
-      self.move = Move.new(choice)
+    loop do
+      puts "Please choose rock, paper, or scissors:"
+      choice = gets.chomp
+      break if Move::VALUES.include?(choice)
+      puts "Sorry invalid choice"
+    end
+    self.move = Move.new(choice)
   end
 end
 
@@ -118,10 +103,12 @@ class RPSGame
     puts "Thanks for playing Rock, Paper, Scissors. Good bye!"
   end
 
-  def display_winner
+  def display_moves
     puts "#{human.name} chose #{human.move}."
     puts "#{computer.name} chose #{computer.move}."
+  end
 
+  def display_winner
     if human.move > computer.move
       puts "#{human.name} won!"
     elsif human.move < computer.move
@@ -136,13 +123,13 @@ class RPSGame
 
     loop do
       puts "Would you like to play again? (y/n)"
-      answer = gets.chomp
-      break if ['y', 'n'].include?(answer.downcase)
+      answer = gets.chomp.downcase
+      break if ['y', 'n'].include?(answer)
       puts "Sorry must be y or n."
     end
 
+    return false if answer == 'n'
     return true if answer == 'y'
-    return false
   end
 
   def play
@@ -150,6 +137,7 @@ class RPSGame
     loop do
       human.choose
       computer.choose
+      display_moves
       display_winner
       break unless play_again?
     end
