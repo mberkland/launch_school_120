@@ -1,17 +1,31 @@
-# Rock, Paper, Scissors is a two-player game where each player chooses one of
-# three possible moves: rock, paper, or scissors. The chosen moves will then
-# be compared to see who wins, according to the following rules:
+# Object Oriented Rock, Paper, Scissors
+class History
+  attr_accessor :wins, :losses
 
-# - rock beats scissors
-# - scissors beats paper
-# - paper beats rock
+  def initialize
+    @wins = []
+    @losses = []
+  end
 
-# If the players chose the same move, then it's a tie.
+  def add_win(move)
+    self.wins.push(move)
+  end
+
+  def add_loss(move)
+    self.losses.push(move)
+  end
+
+  def restart_history
+    self.wins = []
+    self.losses = []
+  end
+end
 
 class Move
-  attr_accessor :value
+  attr_reader :value
 
-  VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock'].freeze
+  VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
+
 
   WINNERS = { "rock" => %w(scissors lizard), "paper" => %w(rock spock),
               "scissors" => %w(paper lizard), "lizard" => %w(spock paper),
@@ -20,6 +34,7 @@ class Move
   def initialize(value)
     @value = value
   end
+
 
   def winning_choice?(other_choice)
     WINNERS[@value].include?(other_choice)
@@ -31,149 +46,167 @@ class Move
 end
 
 class Player
-  attr_accessor :move, :name, :score, :history
+  attr_accessor :name, :move, :history
 
   def initialize
-    @score = 0
+    @history = History.new
     set_name
   end
 end
 
 class Human < Player
   def set_name
-    n = ''
-    loop do
-      puts "What's your name?"
-      n = gets.chomp
-      break unless n.empty?
-      puts "Sorry, must enter a value."
-    end
-    self.name = n
+    n = " "
+      loop do
+        puts "What's your name?"
+        n = gets.chomp
+        break unless n.empty?
+        puts "Sorry, must enter a value"
+      end
+      self.name = n
   end
 
   def choose
     choice = nil
-    loop do
-      puts "Please choose rock, paper, scissors, lizard or spock:"
-      choice = gets.chomp
-      break if Move::VALUES.include?(choice)
-      puts "Sorry invalid choice"
-    end
-    self.move = Move.new(choice)
+      loop do
+        puts "Please choose rock, paper, scissors, lizard or spock:"
+        choice = gets.chomp
+        break if Move::VALUES.include?(choice)
+        puts "Sorry, invalid chocie"
+      end
+      self.move = Move.new(choice)
   end
 end
 
 class Computer < Player
+
   def set_name
-    self.name = ['R2D2', 'Hal', 'Chappie', 'Sonny', 'Number 5', 'Ziggy'].sample
+    self.name = ['R2D2', 'Ziggy', 'Hal', 'Sonny', 'Walee'].sample
+  end
+
+  def r2d2
+    self.move = Move.new(['rock', 'paper', 'scissors'].sample)
+  end
+
+  def ziggy
+    choices = ['rock', 'paper', 'scissors', 'lizard', 'spock']
+    percent_arr = []
+    choices.each do |choice|
+      percent = history.losses.count(choice) / history.losses.size.to_f
+      percent_arr.push(percent)
+    end
+   # Fix this!!!
+    self.move = Move.new(new_choices.sample)
+  end
+
+  def hal
+    self.move = Move.new(['lizard', 'spock'].sample)
+  end
+
+  def sonny
+     self.move = Move.new(['scissors', 'spock'].sample)
+  end
+
+  def walee
+    self.move = Move.new(Move::VALUES.sample)
   end
 
   def choose
-    computer_choice = Move::VALUES.sample
-    self.move = Move.new(computer_choice)
+    case name
+    when 'R2D2'
+      r2d2
+    when 'Ziggy'
+      ziggy
+    when 'Hal'
+      hal
+    when 'Sonny'
+      sonny
+    when 'Walee'
+      walee
+    end
   end
 end
-# Game Orchestration Engine
+
 class RPSGame
-  attr_accessor :human, :computer, :winner
+  attr_accessor :human, :computer, :big_winner
 
   def initialize
     @human = Human.new
     @computer = Computer.new
   end
 
+  def ten_wins?(player)
+    if player.history.wins.count == 10
+      self.big_winner = player.name
+      return true
+    end
+    return false
+  end
+
   def display_welcome_message
-    puts "Hello #{human.name}!"
-    puts "Welcome to Rock, Paper, Scissors, Lizard, Spock!"
-    puts "The first to score ten points wins the game."
+    puts "Welcome #{human.name}, to Rock, Paper, Scissors, Lizard, Spock!"
+    puts "Win 10 rounds to prove you're the best."
   end
 
   def display_goodbye_message
-    puts "Thanks for playing Rock, Paper, Scissors, Lizard, Spock. Good bye!"
-  end
-
-  def display_moves
-    puts "#{human.name} chose #{human.move}."
-    puts "#{computer.name} chose #{computer.move}."
-  end
-
-  def display_score
-    puts "#{human.name}'s current score is #{human.score}"
-    puts "#{computer.name}'s current score is #{computer.score}"
-  end
-
-  def determine_winner
-    if human.move.winning_choice?(computer.move.value)
-      "Human"
-    elsif computer.move.winning_choice?(human.move.value)
-      "Computer"
-    end
-  end
-
-  def change_score
-    if winner == "Human"
-      human.score += 1
-    elsif winner == "Computer"
-      computer.score += 1
-    end
+    puts "#{human.name}, thanks for playing Rock, Paper, Scissors, Lizard, Spock. Good bye!"
   end
 
   def display_winner
-    self.winner = determine_winner
-    if !winner.nil?
-      if winner == "Human"
-        puts "#{human.name} won!"
-      else
-        puts "#{computer.name} won!"
-      end
-      change_score
+    puts "#{human.name} chose #{human.move}."
+    puts "#{computer.name} chose #{computer.move}."
+
+    if human.move.winning_choice?(computer.move.value)
+      puts "#{human.name} won!"
+      human.history.add_win(human.move.value)
+      computer.history.add_loss(computer.move.value)
+    elsif computer.move.winning_choice?(human.move.value)
+      puts "#{computer.name} won!"
+      computer.history.add_win(computer.move.value)
+      human.history.add_loss(human.move.value)
     else
       puts "It's a tie!"
     end
   end
 
-  def big_game_winner?
-    (human.score == 10) || (computer.score == 10)
+  def display_game_count
+      puts "#{human.name}: #{human.history.wins.count} wins "
+      puts "#{computer.name}: #{computer.history.wins.count} wins"
   end
 
-  def display_bgame_winner
-    if human.score == 10
-      puts "#{human.name} won the whole enchilada!"
-    else
-      puts "#{computer.name} won the whole enchilada! Better luck next time."
-    end
+  def display_big_winner
+    puts "#{big_winner} won the whole enchilada!!!"
   end
 
   def play_again?
     answer = nil
-
     loop do
       puts "Would you like to play again? (y/n)"
-      answer = gets.chomp.downcase
-      break if ['y', 'n'].include?(answer)
-      puts "Sorry must be y or n."
+      answer = gets.chomp
+      break if ['y', 'n'].include?(answer.downcase)
+      puts "Sorry, must be y or n"
     end
-
-    human.score = 0 && computer.score = 0 if answer == 'y'
-    return false if answer == 'n'
-    return true if answer == 'y'
+    if answer == 'y'
+      human.history.restart_history
+      computer.history.restart_history
+      return true
+    end
+    return false
   end
 
   def play
     display_welcome_message
+
     loop do
       human.choose
       computer.choose
-      display_moves
-      determine_winner
       display_winner
-      display_score
-      if big_game_winner?
-        display_bgame_winner
+      display_game_count
+      if ten_wins?(human) || ten_wins?(computer)
+        display_big_winner
         break unless play_again?
       end
     end
-
     display_goodbye_message
   end
 end
